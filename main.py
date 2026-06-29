@@ -1,9 +1,23 @@
 from fastapi import FastAPI,status,HTTPException,Request,Depends,Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import time
 app=FastAPI()
 todos=[]
 
+@app.middleware("http")
+async def log_middleware(request:Request,call_next):
+    start_time=time.time()
+    response=await call_next(request)
+    process_duration=time.time()-start_time
+    
+    print(f"path:{request.url.path}|time: {process_duration}")
+    return response
+# async def mymiddleware(request:Request,call_next):
+#     print("request received")
+#     response=await call_next(request)
+#     print("response sent")
+#     return response
 
 def common_logic():
     return {
