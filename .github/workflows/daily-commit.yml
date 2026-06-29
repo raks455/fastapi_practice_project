@@ -15,14 +15,13 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           ref: main
-          fetch-depth: 0
 
       - name: Make daily change
         run: |
           echo "Last updated: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" > last-update.txt
           echo "🌱 Daily contribution - $(date -u +'%A, %B %d %Y')" >> README.md
 
-      - name: Commit & Push
+      - name: Commit and Push with PAT
         run: |
           git config user.name "raks455"
           git config user.email "raks455@users.noreply.github.com"
@@ -33,5 +32,8 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Daily contribution - $(date -u +'%Y-%m-%d')"
+            
+            # Force push using PAT
+            git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/raks455/fastapi_practice_project.git
             git push origin main
           fi
