@@ -1,8 +1,32 @@
-from fastapi import FastAPI,status,HTTPException,Request
+from fastapi import FastAPI,status,HTTPException,Request,Depends,Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 app=FastAPI()
 todos=[]
+
+
+def common_logic():
+    return {
+        "message":"common logic function"
+    }
+def verify_token(token:str=Header(None)):
+    if token !="token":
+      raise HTTPException(status_code=401,detail="Unauthorized")
+    return {
+        "message":"Authorized User"
+    }
+
+@app.get("/secure-data")
+def secureData(user=Depends(verify_token)):
+    return {
+        "message":"secure data accessed",
+        "user":user
+    }
+    
+@app.get("/home")
+def home(data=Depends(common_logic)):
+    return data
+ 
 
 class Todo(BaseModel):
     id:int
