@@ -2,29 +2,42 @@ name: Daily Contribution
 
 on:
   schedule:
-    - cron: '0 12 * * *'    # Runs every day at 12:00 UTC (adjust if needed)
-  workflow_dispatch:        # Allows manual trigger
+    - cron: '0 12 * * *'
+  workflow_dispatch:
 
 jobs:
   daily-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}        # ← Use PAT here
+          fetch-depth: 0
 
       - name: Make daily change
         run: |
-          echo "Daily auto commit - $(date -u)" >> README.md
           echo "Last updated: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" > last-update.txt
+          echo "🌱 Daily contribution - $(date -u +'%A, %B %d %Y')" >> README.md
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet HEAD --; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Commit and push
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          git add README.md last-update.txt
-          git commit -m "Daily contribution - $(date -u +'%Y-%m-%d')" || echo "No changes to commit"
+          git add last-update.txt README.md
+          git commit -m "Daily contribution - $(date -u +'%Y-%m-%d')"
           git push
