@@ -12,7 +12,7 @@ class Todo(Base):
     __tablename__="todo"
     id=Column(Integer,primary_key=True,index=True)
     title=Column(String)
-    description=Column(String)
+  
     completed=Column(Integer)
 
 Base.metadata.create_all(bind=engine)
@@ -29,4 +29,55 @@ def get_db():
 def home(db:Session=Depends(get_db)):
     return {"message":"db connected successfully"}
         
+
+
+@app.post("/todos")
+def createTodo(title:str,completed:bool,db:Session=Depends(get_db)):
+    todo=Todo(title=title,completed=completed)
     
+    db.add(todo)
+    db.commit()
+    db.refresh(todo)
+    return {
+        "message":"todo created successfully",
+        "data":todo
+    }
+
+@app.get("/todos")
+def showTodo(db:Session=Depends(get_db)):
+    todos=db.query(Todo).all()
+    return{
+        "total":len(todos),
+        "data":todos
+    }
+    
+@app.get("/todos/{todo_id}")
+def showTodoById(id=int,db:Session=Depends(get_db)):
+    todos=db.query(Todo).filter(Todo.id==id).first()
+    if not  todos:
+        raise HTTPException(status_code=404,detail="todo not found")
+    return todos
+
+@app.put("/todos/{todo_id}")
+def updateTodoById(id=int,title=str,db:Session=Depends(get_db)):
+    todos=db.query(Todo).filter(Todo.id==id).first()
+    if not todos:
+        raise HTTPException(status_code=404,detail="todo not found")
+    todos.title=title
+    db.commit()
+    db.refresh(todos)
+    return {
+        "message":"todo updated successfully",
+        "data":todos
+    }
+    
+@app.delete("/todos/{todo_id}")
+def deleteById(id=int,db:Session=Depends(get_db)):
+    todos=db.query(Todo).filter(Todo.id==id).first()
+    if not todos:
+        raise HTTPException(status_code=404,detail="todo not found")
+    db.delete(todos)
+    db.commit()
+    return {
+        "message":"todo deleted successfully"
+    }
