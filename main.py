@@ -3,11 +3,20 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import create_engine,Column,Integer,String
 from sqlalchemy.orm import sessionmaker,declarative_base,Session
+import time
+import asyncio
 app=FastAPI()
+
 DATABASE_URL="sqlite:///./testt.db"
 engine=create_engine(DATABASE_URL,connect_args={"check_same_thread":False})
 sessionLocal=sessionmaker(bind=engine)
 Base=declarative_base()
+def task():
+   time.sleep(3)
+   return "Done"
+async def task():
+    await asyncio.sleep(3)
+    return "Done"
 class Todo(Base):
     __tablename__="todo"
     id=Column(Integer,primary_key=True,index=True)
@@ -26,7 +35,8 @@ def get_db():
         db.close
     
 @app.get("/")
-def home(db:Session=Depends(get_db)):
+async def home(db:Session=Depends(get_db)):
+    await asyncio.sleep(3)
     return {"message":"db connected successfully"}
         
 
