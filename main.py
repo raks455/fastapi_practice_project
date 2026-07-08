@@ -1,4 +1,4 @@
-from fastapi import FastAPI,UploadFile,File,HTTPException
+from fastapi import FastAPI,UploadFile,File,HTTPException,Request
 from fastapi.staticfiles import StaticFiles
 import requests
 import os
@@ -6,15 +6,30 @@ from bs4 import BeautifulSoup
 import shutil
 from config import settings
 import time
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 app=FastAPI()
 cache_data=[]
+limiter=Limiter(key_func=get_remote_address)
+app.state.limiter=limiter
+
 last_fetch=0
 url="https://example.com"
 response=requests.get(url)
 soup=BeautifulSoup(response.text,"html.parser")
 print(soup.title.text)
 app.add_middleware(CORSMiddleware,allow_origins=settings.origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"]) 
+@app.exception_handler(RateLimitExceeded)
+def rate_limit_handler(request:Request, exc:RateLimitExceeded):
+    return JSONResponse(content={"error": "Rate limit exceeded"}, status_code=429)
+
+@app.get("/data")
+@limiter.limit("5/minute")
+def getdata(request:Request):
+    return {"message":"Success"}
 @app.get("/news")
 def get_news(page:int=1,limit:int=10):
     global cache_data,last_fetch
