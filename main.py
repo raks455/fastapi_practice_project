@@ -16,7 +16,9 @@ if not os.path.exists(UPLOAD_DIR):
 #Step 2 static file setup
 #Url :htttps://127.0.0.1:8000/FILES/<filename>
 app.mount("/files",StaticFiles(directory=UPLOAD_DIR),name="files")
-
+@app.get("/add")
+def add(a:int,b:int):
+    return {"result":a+b}
 #Step 3 upload file api
 @app.post("/upload")
 def upload_file(file:UploadFile=File(...)):
