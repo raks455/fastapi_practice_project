@@ -2,19 +2,44 @@ from fastapi import FastAPI,UploadFile,File,HTTPException
 from fastapi.staticfiles import StaticFiles
 import requests
 import os
+from bs4 import BeautifulSoup
 import shutil
 from config import settings
 from fastapi.middleware.cors import CORSMiddleware
 app=FastAPI()
-
+url="https://example.com"
+response=requests.get(url)
+soup=BeautifulSoup(response.text,"html.parser")
+print(soup.title.text)
 app.add_middleware(CORSMiddleware,allow_origins=settings.origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"]) 
-response=requests.get("https://jsonplaceholder.typicode.com/posts/")
-data=response.json()
-print(data)
+@app.get("/news")
+def get_news(page:int=1,limit:int=10):
+    url="https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US%3Aen"
+    response=requests.get(url)
+    soup=BeautifulSoup(response.text,"html.parser")
+    title=[]
+    for item in soup.find_all("a",class_="svxzne"):
+        title.append(item.text)
+        start=(page-1)*limit
+        end=start+limit
+        return {
+            "page":page,
+            "limit":limit,
+            "total_news":len(title),
+            "news":title[start:end]
+        }
+    
+  
+      
+       
+
 @app.get("/posts")
-def get_posts():
+def get_posts(page:int=1,limit:int=10):
     url="https://jsonplaceholder.typicode.com/posts/"
-    return requests.get(url).json()
+    start=(page-1)*limit
+    end=start+limit
+    responses=requests.get(url)
+    return{"page":page,"limit":limit,"total_posts":len(responses.json()),"posts":responses.json()[start:end]}
 @app.get("/posts/{id}")
 def get_posts(id:int):
     url=f"https://jsonplaceholder.typicode.com/posts/{id}"
