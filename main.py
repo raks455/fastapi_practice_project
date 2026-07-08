@@ -2,14 +2,12 @@ from fastapi import FastAPI,UploadFile,File,HTTPException
 from fastapi.staticfiles import StaticFiles
 import os
 import shutil
+from .env import origins as origin
 from fastapi.middleware.cors import CORSMiddleware
 app=FastAPI()
 #allowed origin frontend url
-origins=[
-   "http://localhost:5174",
-      "http://localhost:5173"
-]
-app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])    
+
+app.add_middleware(CORSMiddleware,allow_origins=origin,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])    
 
 #Step -1  Ensure upload folderexist
 UPLOAD_DIR = "uploads"
