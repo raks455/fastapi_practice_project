@@ -1,13 +1,28 @@
 from fastapi import FastAPI,UploadFile,File,HTTPException
 from fastapi.staticfiles import StaticFiles
+import requests
 import os
 import shutil
 from config import settings
 from fastapi.middleware.cors import CORSMiddleware
 app=FastAPI()
 
-app.add_middleware(CORSMiddleware,allow_origins=settings.origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"])    
-
+app.add_middleware(CORSMiddleware,allow_origins=settings.origins,allow_credentials=True,allow_methods=["*"],allow_headers=["*"]) 
+response=requests.get("https://jsonplaceholder.typicode.com/posts/")
+data=response.json()
+print(data)
+@app.get("/posts")
+def get_posts():
+    url="https://jsonplaceholder.typicode.com/posts/"
+    return requests.get(url).json()
+@app.get("/posts/{id}")
+def get_posts(id:int):
+    url=f"https://jsonplaceholder.typicode.com/posts/{id}"
+    response=requests.get(url)
+    if response.status_code==200:
+        return response.json()
+    else:
+        raise HTTPException(status_code=404,detail="Post not found")
 #Step -1  Ensure upload folderexist
 UPLOAD_DIR = "uploads"
 if not os.path.exists(UPLOAD_DIR):
