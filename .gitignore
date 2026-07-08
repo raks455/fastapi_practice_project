@@ -2,4 +2,6 @@
 myenv/
 __pycache__
 .pytest_cache
-uploads/
+uploads
+test.db
+testt.db
